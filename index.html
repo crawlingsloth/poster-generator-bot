@@ -68,7 +68,7 @@
 
   .bottom-section{display:flex;justify-content:space-between;align-items:flex-end;margin-top:-150px;gap:20px;position:relative;z-index:1}
 
-  .calendar-section{flex:0 0 auto;max-width:420px;margin-top:80px}
+  .calendar-section{flex:0 0 auto;max-width:420px;margin-top:130px}
   .calendar-title{text-align:center;font-weight:700;font-size:18px;margin-bottom:12px;color:var(--primary-dark);letter-spacing:0.5px;text-transform:uppercase}
   .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:rgba(255,255,255,.5);padding:16px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
   .cal-header{text-align:center;font-weight:800;font-size:14px;color:var(--primary-dark);padding:6px 0;letter-spacing:0.3px}
@@ -76,6 +76,7 @@
   .cal-day.empty{background:transparent;border:none}
   .cal-day.highlighted{background:var(--accent-blue);color:#fff;border:1px solid var(--accent-light);box-shadow:0 1px 3px rgba(52,152,219,.4);font-weight:800}
   .cal-day.today{border:2px solid var(--primary-dark);font-weight:900}
+  .calendar-note{text-align:center;font-weight:600;font-size:14px;margin-top:12px;color:var(--primary-dark);font-style:italic}
 
   @media (max-width:900px){
     header{grid-template-columns:1fr;gap:6px}
@@ -177,6 +178,7 @@
           <div class="cal-header">SAT</div>
           {{CALENDAR_DAYS}}
         </div>
+        <div class="calendar-note">Scheduled days for this month</div>
       </div>
     </div>
 

@@ -24,7 +24,7 @@ async function htmlToPng(htmlPath, outputPath) {
     // Set viewport for better quality (portrait orientation)
     await page.setViewport({
       width: 1080,
-      height: 1400,
+      height: 1550,
       deviceScaleFactor: 2, // Higher resolution
     });
 
