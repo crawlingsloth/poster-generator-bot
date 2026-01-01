@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMMA Express - Background Manager</title>
+  <style>
+    :root {
+      --primary-dark: #2C3E50;
+      --primary-mid: #34495E;
+      --primary-light: #5D6D7E;
+      --accent-blue: #3498DB;
+      --accent-light: #5DADE2;
+      --success: #27AE60;
+      --danger: #E74C3C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--primary-dark);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--primary-light);
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .upload-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .upload-area {
+      border: 3px dashed var(--accent-light);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+      border-color: var(--accent-blue);
+      background: rgba(52, 152, 219, 0.05);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--accent-blue);
+      background: rgba(52, 152, 219, 0.1);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--accent-blue);
+    }
+
+    .upload-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .upload-hint {
+      font-size: 14px;
+      color: var(--primary-light);
+    }
+
+    .gallery-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .bg-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .bg-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .bg-card.active {
+      border-color: var(--success);
+      border-width: 3px;
+      box-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+    }
+
+    .bg-card-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: #f5f5f5;
+    }
+
+    .bg-card-body {
+      padding: 16px;
+    }
+
+    .bg-card-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bg-card-meta {
+      font-size: 12px;
+      color: var(--primary-light);
+      margin-bottom: 12px;
+    }
+
+    .bg-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .active-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--success);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--primary-light);
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--primary-dark);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      max-width: 400px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--primary-light);
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--accent-blue);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2000;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .preview-modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      position: relative;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .preview-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .close-preview {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .close-preview:hover {
+      background: #c0392b;
+    }
+
+    .preview-image-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .preview-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .preview-loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .btn-preview {
+      background: var(--primary-mid);
+      color: white;
+    }
+
+    .btn-preview:hover {
+      background: var(--primary-dark);
+    }
+
+    @media (max-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .preview-content {
+        padding: 20px;
+      }
+
+      .bg-card-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DMMA EXPRESS</h1>
+      <div class="subtitle">Background Manager</div>
+    </header>
+
+    <div class="upload-section">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📤</div>
+        <div class="upload-text">Click to upload or drag and drop</div>
+        <div class="upload-hint">PNG or JPG (Max 10MB)</div>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg">
+      </div>
+    </div>
+
+    <div class="gallery-section">
+      <h2 class="section-title">Background Images</h2>
+      <div id="gallery" class="gallery-grid">
+        <div class="loading">
+          <div class="spinner"></div>
+          <div>Loading backgrounds...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="previewModal" class="preview-modal">
+    <div class="preview-content">
+      <div class="preview-header">
+        <div class="preview-title">Preview Template</div>
+        <button class="close-preview" onclick="closePreview()">Close</button>
+      </div>
+      <div id="previewBody">
+        <div class="preview-loading">
+          <div class="spinner"></div>
+          <div>Generating preview...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const gallery = document.getElementById('gallery');
+    const toast = document.getElementById('toast');
+
+    // Upload area click
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        uploadFile(e.target.files[0]);
+      }
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+
+      if (e.dataTransfer.files.length > 0) {
+        uploadFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Upload file
+    async function uploadFile(file) {
+      // Validate file type
+      if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+        showToast('Only PNG and JPG images are allowed', 'error');
+        return;
+      }
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File size must be less than 10MB', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        showToast('Uploading...', 'info');
+
+        const response = await fetch('/api/backgrounds/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Background uploaded successfully!', 'success');
+          loadBackgrounds();
+          fileInput.value = ''; // Reset input
+        } else {
+          showToast(result.error || 'Upload failed', 'error');
+        }
+      } catch (error) {
+        showToast('Upload failed: ' + error.message, 'error');
+      }
+    }
+
+    // Load backgrounds
+    async function loadBackgrounds() {
+      try {
+        const response = await fetch('/api/backgrounds');
+        const data = await response.json();
+
+        if (data.backgrounds.length === 0) {
+          gallery.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🖼️</div>
+              <div>No backgrounds uploaded yet</div>
+              <div style="margin-top: 8px; font-size: 14px;">Upload your first background image above</div>
+            </div>
+          `;
+          return;
+        }
+
+        gallery.innerHTML = data.backgrounds.map(bg => `
+          <div class="bg-card ${bg.isActive ? 'active' : ''}" data-id="${bg.id}">
+            ${bg.isActive ? '<div class="active-badge">Active</div>' : ''}
+            <img src="${bg.thumbnailUrl}" alt="${bg.originalName}" class="bg-card-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22200%22/%3E%3Ctext fill=%22%23999%22 font-family=%22sans-serif%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EImage%3C/text%3E%3C/svg%3E'">
+            <div class="bg-card-body">
+              <div class="bg-card-name" title="${bg.originalName}">${bg.originalName}</div>
+              <div class="bg-card-meta">
+                ${formatDate(bg.uploadedAt)} • ${formatFileSize(bg.fileSize)}
+              </div>
+              <div class="bg-card-actions">
+                <button class="btn btn-preview" onclick="previewBackground('${bg.id}', '${bg.originalName}')">Preview</button>
+                ${!bg.isActive ? `<button class="btn btn-primary" onclick="selectBackground('${bg.id}')">Use This</button>` : '<button class="btn btn-success" disabled>In Use</button>'}
+                <button class="btn btn-danger" onclick="deleteBackground('${bg.id}')" ${bg.isActive ? 'disabled' : ''}>Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        gallery.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <div>Error loading backgrounds</div>
+            <div style="margin-top: 8px; font-size: 14px;">${error.message}</div>
+          </div>
+        `;
+      }
+    }
+
+    // Select background
+    async function selectBackground(id) {
+      try {
+        const response = await fetch('/api/backgrounds/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ backgroundId: id })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Background selected successfully!', 'success');
+          loadBackgrounds();
+        } else {
+          showToast(result.error || 'Selection failed', 'error');
+        }
+      } catch (error) {
+        showToast('Selection failed: ' + error.message, 'error');
+      }
+    }
+
+    // Delete background
+    async function deleteBackground(id) {
+      if (!confirm('Are you sure you want to delete this background?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/backgrounds/${id}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Background deleted successfully!', 'success');
+          loadBackgrounds();
+        } else {
+          showToast(result.error || 'Deletion failed', 'error');
+        }
+      } catch (error) {
+        showToast('Deletion failed: ' + error.message, 'error');
+      }
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Preview background
+    async function previewBackground(id, name) {
+      const modal = document.getElementById('previewModal');
+      const previewBody = document.getElementById('previewBody');
+
+      // Show modal with loading state
+      modal.classList.add('show');
+      previewBody.innerHTML = `
+        <div class="preview-loading">
+          <div class="spinner"></div>
+          <div>Generating preview...</div>
+        </div>
+      `;
+
+      try {
+        // Generate preview
+        const response = await fetch(`/api/backgrounds/${id}/preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate preview');
+        }
+
+        // Get image blob
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Show preview
+        previewBody.innerHTML = `
+          <div class="preview-image-container">
+            <img src="${imageUrl}" alt="Preview" class="preview-image">
+          </div>
+          <div class="preview-actions">
+            <button class="btn btn-primary" onclick="selectBackgroundFromPreview('${id}')">Use This Background</button>
+            <button class="btn btn-preview" onclick="closePreview()">Cancel</button>
+          </div>
+        `;
+      } catch (error) {
+        previewBody.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <div>Failed to generate preview</div>
+            <div style="margin-top: 8px; font-size: 14px;">${error.message}</div>
+            <div style="margin-top: 16px;">
+              <button class="btn btn-preview" onclick="closePreview()">Close</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Close preview modal
+    function closePreview() {
+      const modal = document.getElementById('previewModal');
+      modal.classList.remove('show');
+    }
+
+    // Select background from preview
+    async function selectBackgroundFromPreview(id) {
+      closePreview();
+      await selectBackground(id);
+    }
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePreview();
+      }
+    });
+
+    // Close modal on background click
+    document.getElementById('previewModal').addEventListener('click', (e) => {
+      if (e.target.id === 'previewModal') {
+        closePreview();
+      }
+    });
+
+    // Load backgrounds on page load
+    loadBackgrounds();
+  </script>
+</body>
+</html>

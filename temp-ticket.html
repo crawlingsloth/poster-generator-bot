@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DMMA EXPRESS 9 – Trip E-Ticket</title>
+<style>
+  :root{
+    --primary-dark:#2C3E50; --primary-mid:#34495E; --primary-light:#5D6D7E;
+    --accent-blue:#3498DB; --accent-light:#5DADE2;
+    --ink:#2C3E50; --muted:rgba(44,62,80,.7);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    color:var(--ink);
+    background: url('https://minio.crawlingsloth.space/telegram-media/dmma-express/speedboat.png') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    position: relative;
+  }
+  body::before{
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.55);
+    z-index: 0;
+  }
+  .wrap{
+    max-width:980px;
+    margin:auto;
+    padding:30px 24px 20px 24px;
+    position: relative;
+    z-index: 1;
+  }
+  header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;position:relative;z-index:1}
+  .brand{font-weight:900;letter-spacing:2px;text-align:center}
+  .brand .top{font-size:44px;line-height:1}
+  .brand .sub{font-weight:700;font-size:12px;opacity:.9;letter-spacing:3px;margin-top:2px}
+  .meta{display:flex;align-items:center;justify-content:center;gap:12px}
+  .meta .col{display:flex;flex-direction:column;text-transform:uppercase;font-weight:700;font-size:14px;letter-spacing:1px}
+  .pill{background:var(--primary-dark);color:#fff;border-radius:14px;padding:10px 16px;font-weight:800;font-size:28px;min-width:84px;text-align:center}
+  .price{justify-self:end;text-align:right;font-size:22px;font-weight:900;color:var(--primary-dark);}
+  .divider{height:2px;background:linear-gradient(90deg, transparent, var(--accent-light), transparent);margin:20px 0;position:relative;z-index:1} /* Increased margin for more spacing */
+  .dhivehi{font-weight:700;text-align:center;margin:6px 0 18px;color:var(--primary-dark);}
+
+  .grid{display:grid;grid-template-columns:1fr 120px 1fr 120px;gap:12px;align-items:center;position:relative;z-index:1}
+  .cell{background:rgba(52,152,219,.12);border-radius:10px;padding:12px 14px;font-weight:700;box-shadow:0 1px 0 rgba(44,62,80,.15);color:var(--primary-dark)}
+  .time{background:rgba(52,152,219,.2);border:1px solid var(--accent-light);text-align:center;font-weight:900;color:var(--primary-dark)}
+
+  .notice{display:flex;justify-content:space-between;align-items:center;background:var(--accent-blue);color:#fff;border-radius:10px;padding:12px 16px;margin:14px 0;font-weight:800}
+  .notice small{opacity:.9;font-weight:600}
+
+  .contacts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px;position:relative;z-index:1}
+  .contact{background:rgba(230,240,250,.7);border-radius:10px;padding:10px 12px;font-weight:700;display:flex;justify-content:space-between;color:var(--primary-dark);border:1px solid rgba(200,220,240,.5)}
+
+  .footer{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;color:var(--primary-dark);position:relative;z-index:1}
+  .fahipay{display:flex;align-items:center;gap:16px}
+  .fahipay img{height:105px;border-radius:10px}
+  .fahipay .txt{font-weight:800;font-size:32px}
+
+  .eticket{text-align:center;font-weight:900;letter-spacing:3px;margin-top:18px;color:var(--primary-dark)}
+  .promo-image{max-width:380px;align-self:flex-start}
+  h3{position:relative;z-index:1;color:var(--primary-dark)}
+
+  .bottom-section{display:flex;justify-content:space-between;align-items:flex-end;margin-top:24px;gap:20px;position:relative;z-index:1}
+
+  .calendar-section{flex:0 0 auto;max-width:280px}
+  .calendar-title{text-align:center;font-weight:700;font-size:14px;margin-bottom:10px;color:var(--primary-dark);letter-spacing:0.5px;text-transform:uppercase}
+  .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:rgba(255,255,255,.5);padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .cal-header{text-align:center;font-weight:800;font-size:10px;color:var(--primary-dark);padding:5px 0;letter-spacing:0.3px}
+  .cal-day{text-align:center;padding:8px 4px;border-radius:5px;font-weight:600;font-size:12px;background:rgba(230,240,250,.6);color:var(--primary-dark);border:1px solid rgba(200,220,240,.4);min-height:26px;display:flex;align-items:center;justify-content:center}
+  .cal-day.empty{background:transparent;border:none}
+  .cal-day.highlighted{background:var(--accent-blue);color:#fff;border:1px solid var(--accent-light);box-shadow:0 1px 3px rgba(52,152,219,.4);font-weight:800}
+  .cal-day.today{border:2px solid var(--primary-dark);font-weight:900}
+
+  @media (max-width:900px){
+    header{grid-template-columns:1fr;gap:6px}
+    .price{justify-self:center;text-align:center}
+    .bottom-section{flex-direction:column;align-items:flex-start}
+    .calendar-section{max-width:200px}
+  }
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr 90px 1fr 90px}
+  }
+  @media (max-width:560px){
+    .grid{grid-template-columns:1fr 1fr;gap:8px}
+    .contacts{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="meta">
+        <div class="col" aria-label="Month">
+          <span>February</span>
+          <span style="opacity:.7">2026</span>
+        </div>
+        <div class="pill" aria-label="Date">28</div>
+        <div class="col" aria-label="Day">
+          <span>Saturday</span>
+        </div>
+      </div>
+
+      <div class="brand">
+        <div class="top">DMMA EXPRESS 9</div>
+      </div>
+
+      <div class="price">PRICE: 480MVR</div>
+    </header>
+
+    <div class="divider"></div>
+
+    <section class="grid" aria-label="Schedule">
+      <div class="cell">Dh. Meedhoo</div>
+      <div class="cell time">06:00</div>
+      <div class="cell">F. Dharaboodhoo</div>
+      <div class="cell time">06:55</div>
+
+      <div class="cell">Dh. Ban'didhoo</div>
+      <div class="cell time">06:10</div>
+      <div class="cell">F. Magoodhoo</div>
+      <div class="cell time">07:00</div>
+
+      <div class="cell">Dh. Rin'budhoo</div>
+      <div class="cell time">06:20</div>
+      <div class="cell">F. Bilehdhoo</div>
+      <div class="cell time">07:10</div>
+
+      <div class="cell">Dh. Hulhudheli</div>
+      <div class="cell time">06:20</div>
+      <div class="cell">F. Feeali</div>
+      <div class="cell time">07:30</div>
+
+      <div class="cell">F. Nilandhoo</div>
+      <div class="cell time">06:50</div>
+      <div class="cell notice" style="grid-column: span 2;">
+        <small>DEPARTURE FROM MALE'</small>
+        <span>11:30</span>
+      </div>
+    </section>
+
+    <h3 style="margin:18px 0 8px">Booking Contacts</h3>
+    <section class="contacts">
+      <div class="contact"><span>Nadheem – Dh. Meedhoo</span><span>9181194</span></div>
+      <div class="contact"><span>Rushdhee – Dh. Ban'didhoo</span><span>9991575</span></div>
+      <div class="contact"><span>Shahid – Dh. Rin'budhoo</span><span>9699264</span></div>
+      <div class="contact"><span>Ali Mohamed – Dh. Hulhudheli</span><span>9645766</span></div>
+      <div class="contact"><span>Niyaz – F. Nilandhoo</span><span>7928834</span></div>
+      <div class="contact"><span>Mohamed – F. Dharaboodhoo</span><span>7954245</span></div>
+      <div class="contact"><span>Abdulla – F. Magoodhoo</span><span>7964980</span></div>
+      <div class="contact"><span>Saira – F. Magoodhoo</span><span>7977698</span></div>
+      <div class="contact"><span>Amlah – F. Bilehdhoo</span><span>7616149</span></div>
+      <div class="contact"><span>Haseema – F. Feeali</span><span>7656937</span></div>
+      <div class="contact"><span>Afzal – Malé</span><span>7801372</span></div>
+    </section>
+
+    <div class="bottom-section">
+      <div class="footer">
+        <div class="fahipay" aria-label="FahiPay">
+          <img src="https://minio.crawlingsloth.space/telegram-media/dmma-express/fahipay-removebg-preview.png" alt="FahiPay Logo"/>
+          <div class="txt">FahiPay</div>
+        </div>
+        <img class="promo-image" src="https://minio.crawlingsloth.space/telegram-media/dmma-express/google-play-store-11551057831reqbf54ect (1).png" alt="App Promotion"/>
+      </div>
+
+      <div class="calendar-section">
+        <div class="calendar-title">February 2026</div>
+        <div class="calendar">
+          <div class="cal-header">SUN</div>
+          <div class="cal-header">MON</div>
+          <div class="cal-header">TUE</div>
+          <div class="cal-header">WED</div>
+          <div class="cal-header">THU</div>
+          <div class="cal-header">FRI</div>
+          <div class="cal-header">SAT</div>
+          <div class="cal-day">1</div><div class="cal-day highlighted">2</div><div class="cal-day highlighted">3</div><div class="cal-day">4</div><div class="cal-day highlighted">5</div><div class="cal-day">6</div><div class="cal-day highlighted">7</div><div class="cal-day">8</div><div class="cal-day highlighted">9</div><div class="cal-day highlighted">10</div><div class="cal-day">11</div><div class="cal-day highlighted">12</div><div class="cal-day">13</div><div class="cal-day highlighted">14</div><div class="cal-day">15</div><div class="cal-day highlighted">16</div><div class="cal-day highlighted">17</div><div class="cal-day">18</div><div class="cal-day highlighted">19</div><div class="cal-day">20</div><div class="cal-day highlighted">21</div><div class="cal-day">22</div><div class="cal-day highlighted">23</div><div class="cal-day highlighted">24</div><div class="cal-day">25</div><div class="cal-day highlighted">26</div><div class="cal-day">27</div><div class="cal-day highlighted today">28</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
