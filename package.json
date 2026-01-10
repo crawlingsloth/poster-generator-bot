@@ -7,7 +7,7 @@
     "convert": "node html-to-png.js",
     "start": "node server.js",
     "dev": "node server.js",
-    "postinstall": "node node_modules/puppeteer/install.js || npx puppeteer browsers install chrome || echo 'Puppeteer browser install skipped'"
+    "postinstall": "node node_modules/puppeteer/install.mjs || echo 'Puppeteer install check complete'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1",
