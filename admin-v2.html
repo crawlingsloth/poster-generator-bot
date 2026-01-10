@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMMA Poster Generator - Admin Panel</title>
+  <style>
+    :root {
+      --primary-dark: #2C3E50;
+      --primary-mid: #34495E;
+      --primary-light: #5D6D7E;
+      --accent-blue: #3498DB;
+      --accent-light: #5DADE2;
+      --success: #27AE60;
+      --danger: #E74C3C;
+      --warning: #F39C12;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--primary-dark);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--primary-light);
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      background: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .tab.active {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .card.active {
+      border-color: var(--success);
+      box-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+    }
+
+    .card.pending {
+      border-color: var(--warning);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .badge-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .badge-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--primary-dark);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      max-width: 400px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--primary-light);
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--accent-blue);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .upload-area {
+      border: 3px dashed var(--accent-light);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+      border-color: var(--accent-blue);
+      background: rgba(52, 152, 219, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f5f5f5;
+      font-weight: 700;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .close-modal {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DMMA POSTER GENERATOR</h1>
+      <div class="subtitle">Admin Control Panel</div>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('chats')">Chat Management</div>
+      <div class="tab" onclick="switchTab('templates')">Templates</div>
+      <div class="tab" onclick="switchTab('backgrounds')">Backgrounds</div>
+      <div class="tab" onclick="switchTab('posters')">Poster Generation</div>
+    </div>
+
+    <!-- Chat Management Tab -->
+    <div id="chats-tab" class="tab-content active">
+      <div class="section">
+        <h2 class="section-title">Pending Approvals</h2>
+        <div id="pending-chats-list"></div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Approved Chats</h2>
+        <div id="approved-chats-list"></div>
+      </div>
+    </div>
+
+    <!-- Templates Tab -->
+    <div id="templates-tab" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">Upload Template</h2>
+        <div class="form-group">
+          <label>Template Name</label>
+          <input type="text" id="templateName" placeholder="e.g., DMMA Default Template">
+        </div>
+        <div class="upload-area" id="templateUploadArea">
+          <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+          <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Click to upload HTML template</div>
+          <div style="font-size: 14px; color: var(--primary-light);">HTML files only (Max 5MB)</div>
+          <input type="file" id="templateFileInput" accept=".html" style="display: none;">
+        </div>
+        <button class="btn btn-primary" onclick="uploadTemplate()" style="margin-top: 20px; width: 100%;">Upload Template</button>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Existing Templates</h2>
+        <div id="templates-list"></div>
+      </div>
+    </div>
+
+    <!-- Backgrounds Tab -->
+    <div id="backgrounds-tab" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">Upload Background</h2>
+        <div class="upload-area" id="backgroundUploadArea">
+          <div style="font-size: 48px; margin-bottom: 16px;">🖼️</div>
+          <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Click to upload background image</div>
+          <div style="font-size: 14px; color: var(--primary-light);">PNG or JPG (Max 10MB)</div>
+          <input type="file" id="backgroundFileInput" accept="image/png,image/jpeg,image/jpg" style="display: none;">
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Existing Backgrounds</h2>
+        <div id="backgrounds-list"></div>
+      </div>
+    </div>
+
+    <!-- Poster Generation Tab -->
+    <div id="posters-tab" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">Batch Generate Posters</h2>
+        <div class="form-group">
+          <label>Select Chat</label>
+          <select id="batchChatId">
+            <option value="">-- Select Chat --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Number of Months</label>
+          <input type="number" id="batchMonths" value="3" min="1" max="12">
+        </div>
+        <button class="btn btn-warning" onclick="batchGeneratePosters()" style="width: 100%;">
+          🚀 Batch Generate Posters
+        </button>
+        <div id="batch-progress" style="margin-top: 20px; display: none;">
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Generating posters... This may take a while.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Modal -->
+  <div id="assignModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Assign Template & Background</div>
+        <button class="close-modal" onclick="closeAssignModal()">Close</button>
+      </div>
+      <div class="form-group">
+        <label>Template</label>
+        <select id="assignTemplate">
+          <option value="">-- Select Template --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Background</label>
+        <select id="assignBackground">
+          <option value="">-- Select Background --</option>
+        </select>
+      </div>
+      <button class="btn btn-success" onclick="saveAssignments()" style="width: 100%;">Save Assignments</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let currentChatId = null;
+    let templates = [];
+    let backgrounds = [];
+
+    // Tab switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+
+      // Load data for the tab
+      if (tabName === 'chats') loadChats();
+      if (tabName === 'templates') loadTemplates();
+      if (tabName === 'backgrounds') loadBackgrounds();
+      if (tabName === 'posters') {
+        loadChatsForBatch();
+      }
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Load chats
+    async function loadChats() {
+      try {
+        const response = await fetch('/api/chats');
+        const data = await response.json();
+
+        const pending = data.chats.filter(c => !c.is_approved);
+        const approved = data.chats.filter(c => c.is_approved);
+
+        // Render pending chats
+        const pendingList = document.getElementById('pending-chats-list');
+        if (pending.length === 0) {
+          pendingList.innerHTML = '<p style="color: var(--primary-light);">No pending approvals</p>';
+        } else {
+          pendingList.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Chat ID</th>
+                  <th>Chat Name</th>
+                  <th>Approval Code</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pending.map(chat => `
+                  <tr>
+                    <td><code>${chat.chat_id}</code></td>
+                    <td>${chat.chat_name || 'N/A'}</td>
+                    <td><strong style="color: var(--warning);">${chat.approval_code}</strong></td>
+                    <td>${new Date(chat.created_at).toLocaleString()}</td>
+                    <td>
+                      <button class="btn btn-success" onclick="approveChat('${chat.approval_code}')">Approve</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+
+        // Render approved chats
+        const approvedList = document.getElementById('approved-chats-list');
+        if (approved.length === 0) {
+          approvedList.innerHTML = '<p style="color: var(--primary-light);">No approved chats yet</p>';
+        } else {
+          approvedList.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Chat ID</th>
+                  <th>Chat Name</th>
+                  <th>Template</th>
+                  <th>Background</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${approved.map(chat => `
+                  <tr>
+                    <td><code>${chat.chat_id}</code></td>
+                    <td>${chat.chat_name || 'N/A'}</td>
+                    <td>${chat.template?.name || '<span style="color: var(--danger);">Not assigned</span>'}</td>
+                    <td>${chat.background?.name || '<span style="color: var(--danger);">Not assigned</span>'}</td>
+                    <td>
+                      <button class="btn btn-primary" onclick="openAssignModal(${chat.chat_id})">Assign</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (error) {
+        showToast('Failed to load chats: ' + error.message, 'error');
+      }
+    }
+
+    // Approve chat
+    async function approveChat(approvalCode) {
+      try {
+        const response = await fetch('/api/chats/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approvalCode })
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+
+        showToast('Chat approved successfully!', 'success');
+        loadChats();
+      } catch (error) {
+        showToast('Failed to approve chat: ' + error.message, 'error');
+      }
+    }
+
+    // Open assign modal
+    async function openAssignModal(chatId) {
+      currentChatId = chatId;
+
+      // Load templates and backgrounds
+      await loadTemplatesForAssign();
+      await loadBackgroundsForAssign();
+
+      document.getElementById('assignModal').classList.add('show');
+    }
+
+    // Close assign modal
+    function closeAssignModal() {
+      document.getElementById('assignModal').classList.remove('show');
+      currentChatId = null;
+    }
+
+    // Load templates for assignment
+    async function loadTemplatesForAssign() {
+      const response = await fetch('/api/templates');
+      const data = await response.json();
+      templates = data.templates;
+
+      const select = document.getElementById('assignTemplate');
+      select.innerHTML = '<option value="">-- Select Template --</option>' +
+        templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+
+    // Load backgrounds for assignment
+    async function loadBackgroundsForAssign() {
+      const response = await fetch('/api/backgrounds');
+      const data = await response.json();
+      backgrounds = data.backgrounds || [];
+
+      const select = document.getElementById('assignBackground');
+      select.innerHTML = '<option value="">-- Select Background --</option>' +
+        backgrounds.map(b => `<option value="${b.id}">${b.originalName || b.name}</option>`).join('');
+    }
+
+    // Save assignments
+    async function saveAssignments() {
+      const templateId = document.getElementById('assignTemplate').value;
+      const backgroundId = document.getElementById('assignBackground').value;
+
+      if (!templateId || !backgroundId) {
+        showToast('Please select both template and background', 'error');
+        return;
+      }
+
+      try {
+        // Assign template
+        const templateRes = await fetch(`/api/chats/${currentChatId}/assign-template`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ templateId })
+        });
+
+        if (!templateRes.ok) throw new Error('Failed to assign template');
+
+        // Assign background
+        const backgroundRes = await fetch(`/api/chats/${currentChatId}/assign-background`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ backgroundId })
+        });
+
+        if (!backgroundRes.ok) throw new Error('Failed to assign background');
+
+        showToast('Assignments saved successfully!', 'success');
+        closeAssignModal();
+        loadChats();
+      } catch (error) {
+        showToast('Failed to save assignments: ' + error.message, 'error');
+      }
+    }
+
+    // Template upload
+    document.getElementById('templateUploadArea').addEventListener('click', () => {
+      document.getElementById('templateFileInput').click();
+    });
+
+    document.getElementById('templateFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('templateUploadArea').innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+          <div style="font-size: 18px; font-weight: 600;">${file.name}</div>
+        `;
+      }
+    });
+
+    async function uploadTemplate() {
+      const name = document.getElementById('templateName').value.trim();
+      const fileInput = document.getElementById('templateFileInput');
+      const file = fileInput.files[0];
+
+      if (!name || !file) {
+        showToast('Please provide template name and file', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('template', file);
+
+      try {
+        showToast('Uploading template...', 'info');
+
+        const response = await fetch('/api/templates/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+
+        showToast('Template uploaded successfully!', 'success');
+        document.getElementById('templateName').value = '';
+        fileInput.value = '';
+        document.getElementById('templateUploadArea').innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+          <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Click to upload HTML template</div>
+          <div style="font-size: 14px; color: var(--primary-light);">HTML files only (Max 5MB)</div>
+        `;
+        loadTemplates();
+      } catch (error) {
+        showToast('Upload failed: ' + error.message, 'error');
+      }
+    }
+
+    // Load templates
+    async function loadTemplates() {
+      try {
+        const response = await fetch('/api/templates');
+        const data = await response.json();
+
+        const list = document.getElementById('templates-list');
+        if (data.templates.length === 0) {
+          list.innerHTML = '<p style="color: var(--primary-light);">No templates uploaded yet</p>';
+        } else {
+          list.innerHTML = `
+            <div class="grid">
+              ${data.templates.map(t => `
+                <div class="card">
+                  <h3 style="margin-bottom: 12px;">${t.name}</h3>
+                  <p style="font-size: 12px; color: var(--primary-light); margin-bottom: 12px;">
+                    Uploaded: ${new Date(t.created_at).toLocaleDateString()}
+                  </p>
+                  <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="deleteTemplate('${t.id}')">Delete</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } catch (error) {
+        showToast('Failed to load templates: ' + error.message, 'error');
+      }
+    }
+
+    // Delete template
+    async function deleteTemplate(id) {
+      if (!confirm('Are you sure you want to delete this template?')) return;
+
+      try {
+        const response = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+
+        showToast('Template deleted successfully!', 'success');
+        loadTemplates();
+      } catch (error) {
+        showToast('Failed to delete template: ' + error.message, 'error');
+      }
+    }
+
+    // Background upload (similar to template)
+    document.getElementById('backgroundUploadArea').addEventListener('click', () => {
+      document.getElementById('backgroundFileInput').click();
+    });
+
+    document.getElementById('backgroundFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        showToast('Uploading background...', 'info');
+
+        const response = await fetch('/api/backgrounds/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+
+        showToast('Background uploaded successfully!', 'success');
+        e.target.value = '';
+        loadBackgrounds();
+      } catch (error) {
+        showToast('Upload failed: ' + error.message, 'error');
+      }
+    });
+
+    // Load backgrounds
+    async function loadBackgrounds() {
+      try {
+        const response = await fetch('/api/backgrounds');
+        const data = await response.json();
+
+        const list = document.getElementById('backgrounds-list');
+        if (data.backgrounds.length === 0) {
+          list.innerHTML = '<p style="color: var(--primary-light);">No backgrounds uploaded yet</p>';
+        } else {
+          list.innerHTML = `
+            <div class="grid">
+              ${data.backgrounds.map(bg => `
+                <div class="card ${bg.isActive ? 'active' : ''}">
+                  <img src="${bg.thumbnailUrl}" alt="${bg.originalName}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">
+                  <h3 style="margin-bottom: 8px; font-size: 14px;">${bg.originalName}</h3>
+                  ${bg.isActive ? '<span class="badge badge-success">Active</span>' : ''}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } catch (error) {
+        showToast('Failed to load backgrounds: ' + error.message, 'error');
+      }
+    }
+
+    // Load chats for batch generation
+    async function loadChatsForBatch() {
+      try {
+        const response = await fetch('/api/chats');
+        const data = await response.json();
+
+        const approved = data.chats.filter(c => c.is_approved && c.template && c.background);
+
+        const select = document.getElementById('batchChatId');
+        select.innerHTML = '<option value="">-- Select Chat --</option>' +
+          approved.map(c => `<option value="${c.chat_id}">${c.chat_name || c.chat_id} (Template: ${c.template.name})</option>`).join('');
+      } catch (error) {
+        showToast('Failed to load chats: ' + error.message, 'error');
+      }
+    }
+
+    // Batch generate posters
+    async function batchGeneratePosters() {
+      const chatId = document.getElementById('batchChatId').value;
+      const months = parseInt(document.getElementById('batchMonths').value);
+
+      if (!chatId) {
+        showToast('Please select a chat', 'error');
+        return;
+      }
+
+      try {
+        document.getElementById('batch-progress').style.display = 'block';
+        showToast('Starting batch generation...', 'info');
+
+        const response = await fetch('/api/posters/batch-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId, months })
+        });
+
+        const result = await response.json();
+        document.getElementById('batch-progress').style.display = 'none';
+
+        if (!response.ok) throw new Error(result.error);
+
+        showToast(`Generated ${result.generated} posters! (${result.errors} errors)`, 'success');
+      } catch (error) {
+        document.getElementById('batch-progress').style.display = 'none';
+        showToast('Batch generation failed: ' + error.message, 'error');
+      }
+    }
+
+    // Load initial data
+    loadChats();
+  </script>
+</body>
+</html>

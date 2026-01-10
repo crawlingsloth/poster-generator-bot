@@ -415,6 +415,28 @@
     </header>
 
     <div class="upload-section">
+      <h2 class="section-title">Generate Poster</h2>
+      <div style="margin-bottom: 20px;">
+        <label for="posterDate" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary-dark);">
+          Date (DD-MM-YYYY or leave empty for tomorrow):
+        </label>
+        <input
+          type="text"
+          id="posterDate"
+          placeholder="DD-MM-YYYY (e.g., 25-12-2025)"
+          style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: inherit;"
+        >
+        <div style="margin-top: 8px; font-size: 12px; color: var(--primary-light);">
+          Leave empty to generate for tomorrow's date
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generatePoster()" style="width: 100%; padding: 12px; font-size: 16px;">
+        Generate & Download Poster
+      </button>
+    </div>
+
+    <div class="upload-section">
+      <h2 class="section-title">Upload Background</h2>
       <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📤</div>
         <div class="upload-text">Click to upload or drag and drop</div>
@@ -639,6 +661,47 @@
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
+    // Generate poster with active background
+    async function generatePoster() {
+      const dateInput = document.getElementById('posterDate').value.trim();
+
+      try {
+        showToast('Generating poster...', 'info');
+
+        const body = {};
+        if (dateInput) {
+          body.date = dateInput;
+        }
+
+        const response = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate poster');
+        }
+
+        // Get image blob
+        const blob = await response.blob();
+
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dmma-poster-${dateInput || 'tomorrow'}-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('Poster generated and downloaded!', 'success');
+      } catch (error) {
+        showToast('Failed to generate poster: ' + error.message, 'error');
+      }
+    }
+
     // Preview background
     async function previewBackground(id, name) {
       const modal = document.getElementById('previewModal');
@@ -653,24 +716,118 @@
         </div>
       `;
 
+      // Add date input to preview
+      const generatePreviewWithDate = async (customDate = null) => {
+        try {
+          const body = {};
+          if (customDate) {
+            body.date = customDate;
+          }
+
+          // Generate preview
+          const response = await fetch(`/api/backgrounds/${id}/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to generate preview');
+          }
+
+          // Get image blob
+          const blob = await response.blob();
+          const imageUrl = URL.createObjectURL(blob);
+
+          // Show preview
+          previewBody.innerHTML = `
+            <div style="margin-bottom: 20px;">
+              <label for="previewDate" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary-dark);">
+                Date (DD-MM-YYYY or leave empty for tomorrow):
+              </label>
+              <div style="display: flex; gap: 8px;">
+                <input
+                  type="text"
+                  id="previewDate"
+                  placeholder="DD-MM-YYYY (e.g., 25-12-2025)"
+                  value="${customDate || ''}"
+                  style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: inherit;"
+                >
+                <button class="btn btn-preview" onclick="regeneratePreview('${id}')">Update</button>
+              </div>
+            </div>
+            <div class="preview-image-container">
+              <img src="${imageUrl}" alt="Preview" class="preview-image">
+            </div>
+            <div class="preview-actions">
+              <button class="btn btn-primary" onclick="selectBackgroundFromPreview('${id}')">Use This Background</button>
+              <button class="btn btn-preview" onclick="closePreview()">Cancel</button>
+            </div>
+          `;
+        } catch (error) {
+          previewBody.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">⚠️</div>
+              <div>Failed to generate preview</div>
+              <div style="margin-top: 8px; font-size: 14px;">${error.message}</div>
+              <div style="margin-top: 16px;">
+                <button class="btn btn-preview" onclick="closePreview()">Close</button>
+              </div>
+            </div>
+          `;
+        }
+      };
+
+      await generatePreviewWithDate();
+    }
+
+    // Regenerate preview with date
+    async function regeneratePreview(id) {
+      const dateInput = document.getElementById('previewDate').value.trim();
+      const previewBody = document.getElementById('previewBody');
+
+      previewBody.innerHTML = `
+        <div class="preview-loading">
+          <div class="spinner"></div>
+          <div>Generating preview...</div>
+        </div>
+      `;
+
       try {
-        // Generate preview
+        const body = {};
+        if (dateInput) {
+          body.date = dateInput;
+        }
+
         const response = await fetch(`/api/backgrounds/${id}/preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
+          body: JSON.stringify(body)
         });
 
         if (!response.ok) {
           throw new Error('Failed to generate preview');
         }
 
-        // Get image blob
         const blob = await response.blob();
         const imageUrl = URL.createObjectURL(blob);
 
-        // Show preview
         previewBody.innerHTML = `
+          <div style="margin-bottom: 20px;">
+            <label for="previewDate" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary-dark);">
+              Date (DD-MM-YYYY or leave empty for tomorrow):
+            </label>
+            <div style="display: flex; gap: 8px;">
+              <input
+                type="text"
+                id="previewDate"
+                placeholder="DD-MM-YYYY (e.g., 25-12-2025)"
+                value="${dateInput}"
+                style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: inherit;"
+              >
+              <button class="btn btn-preview" onclick="regeneratePreview('${id}')">Update</button>
+            </div>
+          </div>
           <div class="preview-image-container">
             <img src="${imageUrl}" alt="Preview" class="preview-image">
           </div>
