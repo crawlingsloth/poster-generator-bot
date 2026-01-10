@@ -287,45 +287,85 @@ app.get("/admin-v2", (req, res) => {
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// List all backgrounds
-app.get("/api/backgrounds", (req, res) => {
+// List all backgrounds (updated to use Supabase)
+app.get("/api/backgrounds", async (req, res) => {
   try {
-    const backgrounds = bgManager.listBackgrounds();
-    res.json(backgrounds);
+    if (!supabase) {
+      // Fallback to old system if Supabase not configured
+      const backgrounds = bgManager.listBackgrounds();
+      return res.json(backgrounds);
+    }
+
+    const { data, error } = await supabase
+      .from("poster_gen__backgrounds")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ backgrounds: data || [] });
   } catch (error) {
     console.error("Error listing backgrounds:", error);
     res.status(500).json({ error: "Failed to list backgrounds" });
   }
 });
 
-// Upload new background
+// Upload new background (updated to use Supabase)
 app.post(
   "/api/backgrounds/upload",
   upload.single("image"),
   async (req, res) => {
     try {
+      if (!supabase) {
+        return res.status(500).json({ error: "Supabase not configured" });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
       const file = req.file;
-      const id = path.basename(file.filename, path.extname(file.filename));
-      const ext = path.extname(file.filename);
+      const fileBuffer = fs.readFileSync(file.path);
 
-      // Create thumbnail
-      await ImageProcessor.createThumbnail(file.path, id, ext);
+      // Upload to Supabase Storage
+      const storagePath = `backgrounds/${file.filename}`;
+      const { error: uploadError } = await supabase.storage
+        .from("poster-assets")
+        .upload(storagePath, fileBuffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
 
-      // Add to state
-      const background = bgManager.addBackground({
-        id,
-        filename: file.filename,
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        fileSize: file.size,
-      });
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      }
 
-      console.log(`Background uploaded: ${file.originalname} (ID: ${id})`);
-      res.json({ success: true, background });
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("poster-assets")
+        .getPublicUrl(storagePath);
+
+      // Insert into database
+      const { data, error } = await supabase
+        .from("poster_gen__backgrounds")
+        .insert({
+          name: file.originalname,
+          storage_path: storagePath,
+          thumbnail_url: urlData.publicUrl,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Database insert failed: ${error.message}`);
+      }
+
+      // Clean up local file
+      fs.unlinkSync(file.path);
+
+      console.log(`Background uploaded to Supabase: ${file.originalname}`);
+      res.json({ success: true, background: data });
     } catch (error) {
       console.error("Error uploading background:", error);
       res.status(500).json({ error: error.message });
