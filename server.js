@@ -7,6 +7,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const cron = require("node-cron");
 const BackgroundManager = require("./lib/background-manager");
 const ImageProcessor = require("./lib/image-processor");
 const supabase = require("./lib/supabase");
@@ -1334,6 +1335,102 @@ app.post("/api/backgrounds/migrate-to-supabase", async (req, res) => {
   }
 });
 
+// ==============================================
+// CLEANUP OLD POSTERS
+// ==============================================
+
+// Function to cleanup old posters (older than 3 days)
+async function cleanupOldPosters() {
+  try {
+    if (!supabase) {
+      console.log("Skipping cleanup - Supabase not configured");
+      return { deleted: 0, errors: 0 };
+    }
+
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const cutoffDate = threeDaysAgo.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    console.log(`\n🧹 Starting cleanup of posters older than ${cutoffDate}...`);
+
+    // Get all posters older than 3 days
+    const { data: oldPosters, error: fetchError } = await supabase
+      .from("poster_gen__cached_posters")
+      .select("id, storage_path, poster_date, chat_id")
+      .lt("poster_date", cutoffDate);
+
+    if (fetchError) throw fetchError;
+
+    if (!oldPosters || oldPosters.length === 0) {
+      console.log("✓ No old posters to clean up");
+      return { deleted: 0, errors: 0 };
+    }
+
+    console.log(`Found ${oldPosters.length} old posters to delete`);
+
+    let deleted = 0;
+    let errors = 0;
+
+    for (const poster of oldPosters) {
+      try {
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+          .from("poster-assets")
+          .remove([poster.storage_path]);
+
+        if (storageError) {
+          console.warn(
+            `Storage deletion warning for ${poster.storage_path}:`,
+            storageError.message
+          );
+        }
+
+        // Delete from database
+        const { error: dbError } = await supabase
+          .from("poster_gen__cached_posters")
+          .delete()
+          .eq("id", poster.id);
+
+        if (dbError) throw dbError;
+
+        deleted++;
+        console.log(`Deleted poster: ${poster.chat_id}/${poster.poster_date}`);
+      } catch (error) {
+        errors++;
+        console.error(
+          `Error deleting poster ${poster.chat_id}/${poster.poster_date}:`,
+          error.message
+        );
+      }
+    }
+
+    console.log(
+      `✓ Cleanup complete: ${deleted} deleted, ${errors} errors\n`
+    );
+    return { deleted, errors };
+  } catch (error) {
+    console.error("Error during cleanup:", error);
+    return { deleted: 0, errors: 1, error: error.message };
+  }
+}
+
+// Manual cleanup endpoint (for testing)
+app.post("/api/posters/cleanup", async (req, res) => {
+  try {
+    const result = await cleanupOldPosters();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error("Error running cleanup:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Schedule cleanup to run every day at midnight (00:00)
+cron.schedule("0 0 * * *", () => {
+  console.log("⏰ Running scheduled cleanup job...");
+  cleanupOldPosters();
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 DMMA Poster Generator Server`);
   console.log(`================================`);
@@ -1355,6 +1452,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`    POST /api/posters/preview - Preview poster (no caching)`);
   console.log(`    POST /api/posters/generate - Generate single poster`);
   console.log(`    POST /api/posters/batch-generate - Batch generate (N months)`);
+  console.log(`    POST /api/posters/cleanup - Cleanup old posters (manual)`);
   console.log(`    GET  /api/posters/:chatId/:date - Get poster (cached/generate)`);
   console.log(`\n  Background Management:`);
   console.log(`    POST /api/backgrounds/upload - Upload background image`);
@@ -1363,5 +1461,8 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n  Legacy:`);
   console.log(`    POST /generate - Generate PNG with custom date/message`);
   console.log(`    GET  /health - Health check`);
+  console.log(`\n⏰ Scheduled Jobs:`);
+  console.log(`    Cleanup old posters - Runs daily at midnight (00:00)`);
+  console.log(`    Removes posters older than 3 days from storage`);
   console.log(`\n✅ Server ready! Check SETUP.md for deployment instructions.\n`);
 });
