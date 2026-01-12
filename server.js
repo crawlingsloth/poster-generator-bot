@@ -127,6 +127,7 @@ async function generatePNG(htmlContent) {
     const scriptPath = path.join(__dirname, "html-to-png.js");
     execSync(`node "${scriptPath}" "${tempHtmlPath}" "${tempPngPath}"`, {
       cwd: __dirname,
+      maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large templates
     });
 
     // Read the generated PNG
