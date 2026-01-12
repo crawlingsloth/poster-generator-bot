@@ -28,8 +28,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 60px;
+      justify-content: flex-start;
+      padding: 40px 60px;
       position: relative;
     }
 
@@ -72,12 +72,13 @@
 
     /* Logo */
     .logo {
-      width: 180px;
-      height: 180px;
-      margin-bottom: 30px;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 40px;
+      margin-top: 20px;
       background: white;
       border-radius: 50%;
-      padding: 15px;
+      padding: 18px;
       box-shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
       display: flex;
       align-items: center;
@@ -95,11 +96,15 @@
     .content {
       text-align: center;
       background: rgba(255, 255, 255, 0.95);
-      padding: 50px 70px;
+      padding: 60px 70px 70px 70px;
       border-radius: 20px;
       box-shadow: 0 10px 40px rgba(139, 69, 19, 0.25);
       border: 4px solid #D2691E;
       max-width: 900px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
     }
 
     .decorative-icon {
@@ -110,26 +115,26 @@
     }
 
     .title {
-      font-size: 58px;
+      font-size: 64px;
       color: #8B4513;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-weight: bold;
       text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
       line-height: 1.2;
     }
 
     .subtitle {
-      font-size: 40px;
+      font-size: 44px;
       color: #A0522D;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       font-weight: 600;
     }
 
     .location {
-      font-size: 48px;
+      font-size: 52px;
       color: #D2691E;
       font-weight: bold;
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       letter-spacing: 2px;
     }
 
@@ -142,18 +147,18 @@
 
     /* Available items section */
     .available-section {
-      margin: 25px 0;
-      padding: 25px;
+      margin: 30px 0;
+      padding: 35px 30px;
       background: linear-gradient(135deg, #FFF5E6 0%, #FFEFD5 100%);
       border-radius: 15px;
       border: 2px dashed #D2691E;
     }
 
     .available-label {
-      font-size: 32px;
+      font-size: 36px;
       color: #8B4513;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -165,9 +170,9 @@
     }
 
     .items-list li {
-      font-size: 36px;
+      font-size: 40px;
       color: #A0522D;
-      padding: 8px 0;
+      padding: 12px 0;
       font-weight: 500;
     }
 
@@ -180,11 +185,11 @@
 
     /* Time display */
     .time-display {
-      font-size: 42px;
+      font-size: 46px;
       color: #D2691E;
       font-weight: bold;
-      margin: 20px 0;
-      padding: 15px 30px;
+      margin: 25px 0;
+      padding: 20px 40px;
       background: white;
       border-radius: 10px;
       display: inline-block;
@@ -200,29 +205,29 @@
     .date-box {
       background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
       color: white;
-      padding: 25px 50px;
+      padding: 30px 60px;
       border-radius: 15px;
-      margin-top: 25px;
+      margin-top: 30px;
       box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
     }
 
     .date-label {
-      font-size: 24px;
+      font-size: 28px;
       text-transform: uppercase;
       letter-spacing: 3px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       opacity: 0.9;
     }
 
     .date {
-      font-size: 44px;
+      font-size: 48px;
       font-weight: bold;
       letter-spacing: 2px;
     }
 
     .tagline {
-      margin-top: 25px;
-      font-size: 28px;
+      margin-top: 30px;
+      font-size: 30px;
       color: #8B4513;
       font-style: italic;
       opacity: 0.8;
