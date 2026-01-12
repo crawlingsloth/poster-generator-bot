@@ -954,6 +954,8 @@ app.post("/api/posters/generate", async (req, res) => {
 
     const { chatId, date, templateData } = req.body;
 
+    console.log(`[POST /api/posters/generate] Request received:`, { chatId, date, hasTemplateData: !!templateData });
+
     if (!chatId) {
       return res.status(400).json({ error: "Chat ID is required" });
     }
@@ -973,6 +975,15 @@ app.post("/api/posters/generate", async (req, res) => {
 
     if (chatError) throw chatError;
 
+    console.log(`[POST /api/posters/generate] Chat details:`, {
+      chatId: chat.chat_id,
+      templateId: chat.assigned_template_id,
+      templateName: chat.template?.name,
+      templatePath: chat.template?.storage_path,
+      backgroundId: chat.assigned_background_id,
+      backgroundPath: chat.background?.storage_path
+    });
+
     if (!chat.is_approved) {
       return res.status(403).json({ error: "Chat is not approved" });
     }
@@ -991,6 +1002,7 @@ app.post("/api/posters/generate", async (req, res) => {
     const posterDate = `${dateComponents.year}-${String(dateComponents.dateObject.getMonth() + 1).padStart(2, "0")}-${String(dateComponents.date).padStart(2, "0")}`;
 
     // Download template from Supabase Storage
+    console.log(`[POST /api/posters/generate] Downloading template from:`, chat.template.storage_path);
     const { data: templateFile, error: templateError } = await supabase.storage
       .from("poster-assets")
       .download(chat.template.storage_path);
@@ -998,6 +1010,7 @@ app.post("/api/posters/generate", async (req, res) => {
     if (templateError) throw templateError;
 
     let htmlContent = await templateFile.text();
+    console.log(`[POST /api/posters/generate] Template downloaded, length:`, htmlContent.length, `First 100 chars:`, htmlContent.substring(0, 100));
 
     // Download background and get public URL
     const { data: bgUrlData } = supabase.storage
