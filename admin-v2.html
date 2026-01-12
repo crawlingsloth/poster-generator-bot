@@ -399,11 +399,11 @@
           <label>Template Name</label>
           <input type="text" id="templateName" placeholder="e.g., DMMA Default Template">
         </div>
-        <div class="upload-area" id="templateUploadArea">
+        <input type="file" id="templateFileInput" accept=".html" style="display: none;">
+        <div class="upload-area" id="templateUploadArea" style="cursor: pointer;">
           <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
           <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Click to upload HTML template</div>
           <div style="font-size: 14px; color: var(--primary-light);">HTML files only (Max 5MB)</div>
-          <input type="file" id="templateFileInput" accept=".html" style="display: none;">
         </div>
         <button class="btn btn-primary" onclick="uploadTemplate()" style="margin-top: 20px; width: 100%;">Upload Template</button>
       </div>
@@ -723,16 +723,11 @@
       const file = e.target.files[0];
       if (file) {
         const uploadArea = document.getElementById('templateUploadArea');
-        // Keep the input element, just update the visual display
+        // Update only the visual display, don't touch the input element
         uploadArea.innerHTML = `
           <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
           <div style="font-size: 18px; font-weight: 600;">${file.name}</div>
-          <input type="file" id="templateFileInput" accept=".html" style="display: none;">
         `;
-        // Re-attach the click listener
-        uploadArea.addEventListener('click', () => {
-          document.getElementById('templateFileInput').click();
-        });
       }
     });
 
@@ -775,31 +770,18 @@
         if (!response.ok) throw new Error(result.error);
 
         showToast('Template uploaded successfully!', 'success');
+
+        // Clear form
         document.getElementById('templateName').value = '';
+        document.getElementById('templateFileInput').value = '';
+
+        // Reset upload area display
         document.getElementById('templateUploadArea').innerHTML = `
           <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
           <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Click to upload HTML template</div>
           <div style="font-size: 14px; color: var(--primary-light);">HTML files only (Max 5MB)</div>
-          <input type="file" id="templateFileInput" accept=".html" style="display: none;">
         `;
-        // Re-attach the event listeners
-        document.getElementById('templateUploadArea').addEventListener('click', () => {
-          document.getElementById('templateFileInput').click();
-        });
-        document.getElementById('templateFileInput').addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const uploadArea = document.getElementById('templateUploadArea');
-            uploadArea.innerHTML = `
-              <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-              <div style="font-size: 18px; font-weight: 600;">${file.name}</div>
-              <input type="file" id="templateFileInput" accept=".html" style="display: none;">
-            `;
-            uploadArea.addEventListener('click', () => {
-              document.getElementById('templateFileInput').click();
-            });
-          }
-        });
+
         loadTemplates();
       } catch (error) {
         console.error('❌ Upload error:', error);
