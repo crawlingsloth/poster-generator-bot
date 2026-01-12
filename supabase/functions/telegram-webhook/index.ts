@@ -170,10 +170,17 @@ function parseTemplateData(text: string): { date: string | null; templateData: R
 
 // Handle date request
 async function handleDateRequest(chatId: number, messageText: string) {
+  console.log(`[handleDateRequest] START - chatId: ${chatId}`);
+  console.log(`[handleDateRequest] Raw message text:`, JSON.stringify(messageText));
+
   // Parse date and template data
   const { date: parsedDate, templateData } = parseTemplateData(messageText);
 
+  console.log(`[handleDateRequest] Parsed date:`, parsedDate);
+  console.log(`[handleDateRequest] Parsed templateData:`, JSON.stringify(templateData));
+
   if (!parsedDate) {
+    console.log(`[handleDateRequest] Invalid date, sending error message`);
     await sendMessage(
       chatId,
       "❌ Invalid date format. Please use DD-MM-YYYY format.\n\nExample: `15-01-2025`\n\nYou can also add custom data:\n```\n15-01-2025\ntime: 3pm\nitems: Tuna Bun, Creme Bun\n```",
@@ -213,6 +220,7 @@ async function handleDateRequest(chatId: number, messageText: string) {
   }
 
   // Send "generating" message
+  console.log(`[handleDateRequest] Sending 'generating' message to user`);
   await sendMessage(chatId, "⏳ Generating your poster...");
 
   try {
@@ -225,30 +233,39 @@ async function handleDateRequest(chatId: number, messageText: string) {
     // Add templateData if present
     if (Object.keys(templateData).length > 0) {
       requestBody.templateData = templateData;
-      console.log("Custom template data:", templateData);
+      console.log(`[handleDateRequest] Custom template data included:`, JSON.stringify(templateData));
     }
 
+    const apiUrl = `${RENDERER_URL}/api/posters/generate`;
+    console.log(`[handleDateRequest] Calling API: ${apiUrl}`);
+    console.log(`[handleDateRequest] Request body:`, JSON.stringify(requestBody, null, 2));
+
     // Request poster from renderer service
-    const response = await fetch(`${RENDERER_URL}/api/posters/generate`, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     });
 
+    console.log(`[handleDateRequest] API response status: ${response.status} ${response.statusText}`);
+
     const result = await response.json();
+    console.log(`[handleDateRequest] API response body:`, JSON.stringify(result));
 
     if (!response.ok) {
       throw new Error(result.error || "Failed to generate poster");
     }
 
     // Send poster to user
+    console.log(`[handleDateRequest] Sending poster to user: ${result.posterUrl}`);
     await sendPhoto(
       chatId,
       result.posterUrl,
       "✨ Fresh poster generated!",
     );
+    console.log(`[handleDateRequest] SUCCESS - Poster sent to user`);
   } catch (error) {
-    console.error("Error generating poster:", error);
+    console.error(`[handleDateRequest] ERROR:`, error);
     await sendMessage(
       chatId,
       "❌ Sorry, failed to generate poster. Please try again or contact the admin.",
