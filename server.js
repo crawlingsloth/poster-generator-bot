@@ -952,7 +952,7 @@ app.post("/api/posters/generate", async (req, res) => {
       return res.status(500).json({ error: "Supabase not configured" });
     }
 
-    const { chatId, date } = req.body;
+    const { chatId, date, templateData } = req.body;
 
     if (!chatId) {
       return res.status(400).json({ error: "Chat ID is required" });
@@ -1025,6 +1025,11 @@ app.post("/api/posters/generate", async (req, res) => {
     htmlContent = htmlContent.replace("{{CALENDAR_MONTH}}", calendarMonthName);
     htmlContent = htmlContent.replace("{{CALENDAR_YEAR}}", calendarYear);
     htmlContent = htmlContent.replace("{{CALENDAR_DAYS}}", calendarHTML);
+
+    // Replace custom template data
+    if (templateData) {
+      htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
+    }
 
     // Generate PNG
     const pngBuffer = await generatePNG(htmlContent);
