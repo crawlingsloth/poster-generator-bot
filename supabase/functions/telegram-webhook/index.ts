@@ -276,8 +276,8 @@ serve(async (req) => {
       if (text === "/start") {
         await handleStart(chatId, chatTitle);
       }
-      // Handle date request
-      else if (text.match(/^\d{1,2}-\d{1,2}-\d{4}$/) || text.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+      // Handle date request (check if message starts with a date)
+      else if (text.match(/^\d{1,2}-\d{1,2}-\d{4}/) || text.match(/^\d{4}-\d{1,2}-\d{1,2}/)) {
         await handleDateRequest(chatId, text);
       }
       // Unknown command
