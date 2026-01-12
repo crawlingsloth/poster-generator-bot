@@ -15,7 +15,18 @@ async function htmlToPng(htmlPath, outputPath) {
 
   const browser = await puppeteer.launch({
     headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--disable-gpu",
+      "--window-size=1080,1550",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? "/usr/bin/google-chrome-stable"
+        : puppeteer.executablePath(),
   });
 
   try {
