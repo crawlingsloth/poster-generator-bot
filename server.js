@@ -1096,17 +1096,25 @@ app.post("/api/posters/batch-generate", async (req, res) => {
       try {
         const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-        // Check if already cached
+        // Check if already cached with current template/background
         const { data: existing } = await supabase
           .from("poster_gen__cached_posters")
-          .select("id")
+          .select("id, template_id, background_id")
           .eq("chat_id", chatId)
           .eq("poster_date", dateStr)
           .single();
 
         if (existing) {
-          console.log(`Skipping ${dateStr} - already cached`);
-          continue;
+          // Check if template/background matches
+          if (
+            existing.template_id === chat.template.id &&
+            existing.background_id === chat.background.id
+          ) {
+            console.log(`Skipping ${dateStr} - already cached with current template/background`);
+            continue;
+          } else {
+            console.log(`Regenerating ${dateStr} - template or background changed`);
+          }
         }
 
         // Get date components
@@ -1153,14 +1161,17 @@ app.post("/api/posters/batch-generate", async (req, res) => {
           dateStr,
         );
 
-        // Cache in database
-        await supabase.from("poster_gen__cached_posters").insert({
-          chat_id: chatId,
-          poster_date: dateStr,
-          storage_path: storagePath,
-          template_id: chat.template.id,
-          background_id: chat.background.id,
-        });
+        // Cache in database (upsert to replace if exists)
+        await supabase.from("poster_gen__cached_posters").upsert(
+          {
+            chat_id: chatId,
+            poster_date: dateStr,
+            storage_path: storagePath,
+            template_id: chat.template.id,
+            background_id: chat.background.id,
+          },
+          { onConflict: "chat_id,poster_date" }
+        );
 
         generated.push(dateStr);
         console.log(`Generated poster for ${dateStr}`);
@@ -1191,21 +1202,40 @@ app.get("/api/posters/:chatId/:date", async (req, res) => {
 
     const { chatId, date } = req.params;
 
-    // Check cache first
+    // Get current chat settings to validate cache
+    const { data: chat, error: chatError } = await supabase
+      .from("poster_gen__chats")
+      .select("assigned_template_id, assigned_background_id")
+      .eq("chat_id", chatId)
+      .single();
+
+    if (chatError) throw chatError;
+
+    // Check cache first - must match current template and background
     const { data: cached, error: cacheError } = await supabase
       .from("poster_gen__cached_posters")
-      .select("storage_path")
+      .select("storage_path, template_id, background_id")
       .eq("chat_id", chatId)
       .eq("poster_date", date)
       .single();
 
     if (!cacheError && cached) {
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("poster-assets")
-        .getPublicUrl(cached.storage_path);
+      // Validate that cached poster uses current template/background
+      if (
+        cached.template_id === chat.assigned_template_id &&
+        cached.background_id === chat.assigned_background_id
+      ) {
+        // Cache is valid - return it
+        const { data: urlData } = supabase.storage
+          .from("poster-assets")
+          .getPublicUrl(cached.storage_path);
 
-      return res.json({ success: true, posterUrl: urlData.publicUrl, cached: true });
+        console.log(`Returning cached poster for ${chatId}/${date}`);
+        return res.json({ success: true, posterUrl: urlData.publicUrl, cached: true });
+      } else {
+        // Cache is stale (template/background changed) - regenerate
+        console.log(`Cache stale for ${chatId}/${date} - template or background changed`);
+      }
     }
 
     // Not cached, generate on-demand
