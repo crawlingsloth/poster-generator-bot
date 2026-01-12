@@ -435,6 +435,32 @@
     <!-- Poster Generation Tab -->
     <div id="posters-tab" class="tab-content">
       <div class="section">
+        <h2 class="section-title">Preview Poster</h2>
+        <div class="form-group">
+          <label>Select Chat</label>
+          <select id="previewChatId">
+            <option value="">-- Select Chat --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Preview Date (optional, defaults to tomorrow)</label>
+          <input type="text" id="previewDate" placeholder="DD-MM-YYYY or leave empty for tomorrow">
+        </div>
+        <button class="btn btn-primary" onclick="previewPoster()" style="width: 100%;">
+          👁️ Preview Poster
+        </button>
+        <div id="preview-container" style="margin-top: 20px; display: none; text-align: center;">
+          <img id="preview-image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);" />
+        </div>
+        <div id="preview-loading" style="margin-top: 20px; display: none;">
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Generating preview...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
         <h2 class="section-title">Batch Generate Posters</h2>
         <div class="form-group">
           <label>Select Chat</label>
@@ -855,11 +881,62 @@
 
         const approved = data.chats.filter(c => c.is_approved && c.template && c.background);
 
-        const select = document.getElementById('batchChatId');
-        select.innerHTML = '<option value="">-- Select Chat --</option>' +
+        const batchSelect = document.getElementById('batchChatId');
+        const previewSelect = document.getElementById('previewChatId');
+
+        const options = '<option value="">-- Select Chat --</option>' +
           approved.map(c => `<option value="${c.chat_id}">${c.chat_name || c.chat_id} (Template: ${c.template.name})</option>`).join('');
+
+        batchSelect.innerHTML = options;
+        previewSelect.innerHTML = options;
       } catch (error) {
         showToast('Failed to load chats: ' + error.message, 'error');
+      }
+    }
+
+    // Preview poster
+    async function previewPoster() {
+      const chatId = document.getElementById('previewChatId').value;
+      const date = document.getElementById('previewDate').value.trim();
+
+      if (!chatId) {
+        showToast('Please select a chat', 'error');
+        return;
+      }
+
+      try {
+        document.getElementById('preview-loading').style.display = 'block';
+        document.getElementById('preview-container').style.display = 'none';
+
+        const body = { chatId };
+        if (date) {
+          body.date = date;
+        }
+
+        const response = await fetch('/api/posters/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to generate preview');
+        }
+
+        // Get the image blob and create object URL
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Display the preview image
+        document.getElementById('preview-image').src = imageUrl;
+        document.getElementById('preview-container').style.display = 'block';
+        document.getElementById('preview-loading').style.display = 'none';
+
+        showToast('Preview generated successfully!', 'success');
+      } catch (error) {
+        document.getElementById('preview-loading').style.display = 'none';
+        showToast('Preview failed: ' + error.message, 'error');
       }
     }
 

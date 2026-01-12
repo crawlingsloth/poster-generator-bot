@@ -808,6 +808,104 @@ async function uploadPosterToStorage(pngBuffer, chatId, date) {
   return { storagePath, publicUrl: urlData.publicUrl };
 }
 
+// Preview poster for specific chat and date (without saving to cache)
+app.post("/api/posters/preview", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: "Supabase not configured" });
+    }
+
+    const { chatId, date } = req.body;
+
+    if (!chatId) {
+      return res.status(400).json({ error: "Chat ID is required" });
+    }
+
+    // Get chat details with template and background
+    const { data: chat, error: chatError } = await supabase
+      .from("poster_gen__chats")
+      .select(
+        `
+        *,
+        template:assigned_template_id(id, name, storage_path),
+        background:assigned_background_id(id, name, storage_path)
+      `,
+      )
+      .eq("chat_id", chatId)
+      .single();
+
+    if (chatError) throw chatError;
+
+    if (!chat.is_approved) {
+      return res.status(403).json({ error: "Chat is not approved" });
+    }
+
+    if (!chat.template || !chat.background) {
+      return res
+        .status(400)
+        .json({ error: "Chat must have template and background assigned" });
+    }
+
+    // Get date components
+    const dateComponents = date
+      ? getDateComponents(date)
+      : getTomorrowDateComponents();
+
+    // Download template from Supabase Storage
+    const { data: templateData, error: templateError } = await supabase.storage
+      .from("poster-assets")
+      .download(chat.template.storage_path);
+
+    if (templateError) throw templateError;
+
+    let htmlContent = await templateData.text();
+
+    // Download background and get public URL
+    const { data: bgUrlData } = supabase.storage
+      .from("poster-assets")
+      .getPublicUrl(chat.background.storage_path);
+
+    // Replace placeholders
+    const calendarDate = dateComponents.dateObject;
+    const calendarYear = calendarDate.getFullYear();
+    const calendarMonth = calendarDate.getMonth();
+    const calendarMonthName = calendarDate.toLocaleDateString("en-US", {
+      month: "long",
+    });
+    const calendarHTML = generateCalendar(
+      calendarYear,
+      calendarMonth,
+      dateComponents.date,
+    );
+
+    htmlContent = htmlContent.replace("{{BACKGROUND_URL}}", bgUrlData.publicUrl);
+    htmlContent = htmlContent.replace("{{MONTH}}", dateComponents.month);
+    htmlContent = htmlContent.replace("{{YEAR}}", dateComponents.year);
+    htmlContent = htmlContent.replace("{{DATE}}", dateComponents.date);
+    htmlContent = htmlContent.replace("{{DAY}}", dateComponents.day);
+    htmlContent = htmlContent.replace("{{CALENDAR_MONTH}}", calendarMonthName);
+    htmlContent = htmlContent.replace("{{CALENDAR_YEAR}}", calendarYear);
+    htmlContent = htmlContent.replace("{{CALENDAR_DAYS}}", calendarHTML);
+
+    console.log(`Generating preview for chat ${chatId}`);
+
+    // Generate PNG
+    const pngBuffer = await generatePNG(htmlContent);
+
+    // Send the image as response (no caching)
+    res.set({
+      "Content-Type": "image/png",
+      "Content-Length": pngBuffer.length,
+    });
+    res.send(pngBuffer);
+
+    console.log("Preview PNG generated successfully");
+  } catch (error) {
+    console.error("Error generating preview:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Generate poster for specific chat and date
 app.post("/api/posters/generate", async (req, res) => {
   try {
@@ -1224,6 +1322,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`    POST /api/chats/:chatId/assign-template - Assign template`);
   console.log(`    POST /api/chats/:chatId/assign-background - Assign background`);
   console.log(`\n  Poster Generation:`);
+  console.log(`    POST /api/posters/preview - Preview poster (no caching)`);
   console.log(`    POST /api/posters/generate - Generate single poster`);
   console.log(`    POST /api/posters/batch-generate - Batch generate (N months)`);
   console.log(`    GET  /api/posters/:chatId/:date - Get poster (cached/generate)`);
