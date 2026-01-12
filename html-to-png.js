@@ -38,15 +38,28 @@ async function htmlToPng(htmlPath, outputPath) {
 
     // Load the HTML file
     const htmlContent = fs.readFileSync(htmlPath, "utf8");
-    const htmlUrl = `file://${path.resolve(htmlPath)}`;
 
-    await page.goto(htmlUrl, {
+    // Use setContent instead of goto to allow external resources to load properly
+    await page.setContent(htmlContent, {
       waitUntil: "networkidle0",
     });
 
     // Wait for fonts to load (especially important for Dhivehi/Thaana script)
     await page.evaluateHandle('document.fonts.ready');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Additional safety wait for non-Latin fonts
+
+    // Wait for all images to load
+    await page.evaluate(() => {
+      return Promise.all(
+        Array.from(document.images)
+          .filter(img => !img.complete)
+          .map(img => new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve; // Continue even if image fails to load
+          }))
+      );
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Additional safety wait
 
     // Take screenshot
     await page.screenshot({
