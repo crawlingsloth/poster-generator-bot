@@ -737,20 +737,30 @@
     });
 
     async function uploadTemplate() {
+      console.log('🚀 uploadTemplate() called');
+
       const name = document.getElementById('templateName').value.trim();
+      console.log('📝 Template name:', name);
+
       const fileInput = document.getElementById('templateFileInput');
-      const file = fileInput.files[0];
+      console.log('📎 File input element:', fileInput);
+
+      const file = fileInput ? fileInput.files[0] : null;
+      console.log('📄 Selected file:', file);
 
       if (!name || !file) {
+        console.log('❌ Validation failed - name:', name, 'file:', file);
         showToast('Please provide template name and file', 'error');
         return;
       }
 
+      console.log('✅ Validation passed, creating FormData');
       const formData = new FormData();
       formData.append('name', name);
       formData.append('template', file);
 
       try {
+        console.log('📤 Starting upload...');
         showToast('Uploading template...', 'info');
 
         const response = await fetch('/api/templates/upload', {
@@ -758,7 +768,10 @@
           body: formData
         });
 
+        console.log('📥 Response received:', response.status);
         const result = await response.json();
+        console.log('📋 Result:', result);
+
         if (!response.ok) throw new Error(result.error);
 
         showToast('Template uploaded successfully!', 'success');
@@ -789,8 +802,10 @@
         });
         loadTemplates();
       } catch (error) {
+        console.error('❌ Upload error:', error);
         showToast('Upload failed: ' + error.message, 'error');
       }
+      console.log('🏁 uploadTemplate() completed');
     }
 
     // Load templates
