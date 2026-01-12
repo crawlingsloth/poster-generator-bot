@@ -134,14 +134,49 @@ async function handleStart(chatId: number, chatTitle?: string) {
   );
 }
 
+// Parse custom template data from message
+function parseTemplateData(text: string): { date: string | null; templateData: Record<string, any> } {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+  if (lines.length === 0) {
+    return { date: null, templateData: {} };
+  }
+
+  // First line should be the date
+  const date = parseDate(lines[0]);
+
+  // Parse remaining lines as key: value pairs
+  const templateData: Record<string, any> = {};
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const colonIndex = line.indexOf(':');
+
+    if (colonIndex > 0) {
+      const key = line.substring(0, colonIndex).trim();
+      const value = line.substring(colonIndex + 1).trim();
+
+      // Handle comma-separated lists
+      if (value.includes(',')) {
+        templateData[key] = value.split(',').map(v => v.trim());
+      } else {
+        templateData[key] = value;
+      }
+    }
+  }
+
+  return { date, templateData };
+}
+
 // Handle date request
-async function handleDateRequest(chatId: number, dateStr: string) {
-  // Validate date format
-  const parsedDate = parseDate(dateStr);
+async function handleDateRequest(chatId: number, messageText: string) {
+  // Parse date and template data
+  const { date: parsedDate, templateData } = parseTemplateData(messageText);
+
   if (!parsedDate) {
     await sendMessage(
       chatId,
-      "❌ Invalid date format. Please use DD-MM-YYYY format.\n\nExample: `15-01-2025`",
+      "❌ Invalid date format. Please use DD-MM-YYYY format.\n\nExample: `15-01-2025`\n\nYou can also add custom data:\n```\n15-01-2025\ntime: 3pm\nitems: Tuna Bun, Creme Bun\n```",
     );
     return;
   }
@@ -181,8 +216,25 @@ async function handleDateRequest(chatId: number, dateStr: string) {
   await sendMessage(chatId, "⏳ Generating your poster...");
 
   try {
+    // Prepare request body
+    const requestBody: any = {
+      chatId: chatId.toString(),
+      date: parsedDate,
+    };
+
+    // Add templateData if present
+    if (Object.keys(templateData).length > 0) {
+      requestBody.templateData = templateData;
+      console.log("Custom template data:", templateData);
+    }
+
     // Request poster from renderer service
-    const response = await fetch(`${RENDERER_URL}/api/posters/${chatId}/${parsedDate}`);
+    const response = await fetch(`${RENDERER_URL}/api/posters/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+
     const result = await response.json();
 
     if (!response.ok) {
@@ -193,7 +245,7 @@ async function handleDateRequest(chatId: number, dateStr: string) {
     await sendPhoto(
       chatId,
       result.posterUrl,
-      result.cached ? "📌 Poster (from cache)" : "✨ Fresh poster generated!",
+      "✨ Fresh poster generated!",
     );
   } catch (error) {
     console.error("Error generating poster:", error);
