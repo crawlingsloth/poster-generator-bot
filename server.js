@@ -886,13 +886,13 @@ app.post("/api/posters/preview", async (req, res) => {
       : getTomorrowDateComponents();
 
     // Download template from Supabase Storage
-    const { data: templateData, error: templateError } = await supabase.storage
+    const { data: templateFile, error: templateError } = await supabase.storage
       .from("poster-assets")
       .download(chat.template.storage_path);
 
     if (templateError) throw templateError;
 
-    let htmlContent = await templateData.text();
+    let htmlContent = await templateFile.text();
 
     // Download background and get public URL
     const { data: bgUrlData } = supabase.storage
@@ -991,13 +991,13 @@ app.post("/api/posters/generate", async (req, res) => {
     const posterDate = `${dateComponents.year}-${String(dateComponents.dateObject.getMonth() + 1).padStart(2, "0")}-${String(dateComponents.date).padStart(2, "0")}`;
 
     // Download template from Supabase Storage
-    const { data: templateData, error: templateError } = await supabase.storage
+    const { data: templateFile, error: templateError } = await supabase.storage
       .from("poster-assets")
       .download(chat.template.storage_path);
 
     if (templateError) throw templateError;
 
-    let htmlContent = await templateData.text();
+    let htmlContent = await templateFile.text();
 
     // Download background and get public URL
     const { data: bgUrlData } = supabase.storage
