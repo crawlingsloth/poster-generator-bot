@@ -23,10 +23,7 @@ async function htmlToPng(htmlPath, outputPath) {
       "--disable-gpu",
       "--window-size=1080,1550",
     ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? "/usr/bin/google-chrome-stable"
-        : puppeteer.executablePath(),
+    // Use Puppeteer's bundled Chrome in all environments
   });
 
   try {
