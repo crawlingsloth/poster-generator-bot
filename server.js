@@ -1042,6 +1042,13 @@ app.post("/api/posters/generate", async (req, res) => {
     // Replace custom template data
     if (templateData) {
       htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
+      console.log(`[POST /api/posters/generate] Applied custom template data`);
+    }
+
+    // Debug mode: return HTML instead of PNG if debug=true
+    if (req.body.debug === true) {
+      console.log(`[POST /api/posters/generate] DEBUG MODE - returning HTML`);
+      return res.send(htmlContent);
     }
 
     // Generate PNG
