@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alina Bakery - Bun Availability</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1080px;
+      height: 1080px;
+      background: linear-gradient(135deg, #FFF8E7 0%, #FFE5B4 50%, #FFDAB9 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Georgia', 'Garamond', serif;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+    }
+
+    /* Decorative corner elements */
+    .corner {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border: 3px solid #8B4513;
+      opacity: 0.3;
+    }
+
+    .corner.top-left {
+      top: 40px;
+      left: 40px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner.top-right {
+      top: 40px;
+      right: 40px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .corner.bottom-left {
+      bottom: 40px;
+      left: 40px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .corner.bottom-right {
+      bottom: 40px;
+      right: 40px;
+      border-left: none;
+      border-top: none;
+    }
+
+    /* Logo */
+    .logo {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 30px;
+      background: white;
+      border-radius: 50%;
+      padding: 15px;
+      box-shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Main content */
+    .content {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 50px 70px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(139, 69, 19, 0.25);
+      border: 4px solid #D2691E;
+      max-width: 900px;
+    }
+
+    .emoji {
+      font-size: 70px;
+      margin-bottom: 15px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .title {
+      font-size: 58px;
+      color: #8B4513;
+      margin-bottom: 15px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 40px;
+      color: #A0522D;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .location {
+      font-size: 48px;
+      color: #D2691E;
+      font-weight: bold;
+      margin-bottom: 25px;
+      letter-spacing: 2px;
+    }
+
+    .wheat {
+      font-size: 35px;
+      color: #DAA520;
+      margin: 0 15px;
+    }
+
+    /* Available items section */
+    .available-section {
+      margin: 25px 0;
+      padding: 25px;
+      background: linear-gradient(135deg, #FFF5E6 0%, #FFEFD5 100%);
+      border-radius: 15px;
+      border: 2px dashed #D2691E;
+    }
+
+    .available-label {
+      font-size: 32px;
+      color: #8B4513;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .items-list li {
+      font-size: 36px;
+      color: #A0522D;
+      padding: 8px 0;
+      font-weight: 500;
+    }
+
+    .items-list li:before {
+      content: "🥐 ";
+      margin-right: 10px;
+    }
+
+    /* Time display */
+    .time-display {
+      font-size: 42px;
+      color: #D2691E;
+      font-weight: bold;
+      margin: 20px 0;
+      padding: 15px 30px;
+      background: white;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
+    }
+
+    .time-display:before {
+      content: "🕐 ";
+      margin-right: 10px;
+    }
+
+    /* Date box */
+    .date-box {
+      background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+      color: white;
+      padding: 25px 50px;
+      border-radius: 15px;
+      margin-top: 25px;
+      box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+    }
+
+    .date-label {
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+
+    .date {
+      font-size: 44px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .tagline {
+      margin-top: 25px;
+      font-size: 28px;
+      color: #8B4513;
+      font-style: italic;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Decorative corners -->
+    <div class="corner top-left"></div>
+    <div class="corner top-right"></div>
+    <div class="corner bottom-left"></div>
+    <div class="corner bottom-right"></div>
+
+    <!-- Logo -->
+    <div class="logo">
+      <img src="https://alinabakery.crawlingsloth.cloud/logo.png" alt="Alina Bakery">
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+      <div class="emoji">🥐</div>
+
+      <div class="title">Buns Available</div>
+      <div class="subtitle">Today at</div>
+      <div class="location">
+        <span class="wheat">🌾</span>
+        BLVQ
+        <span class="wheat">🌾</span>
+      </div>
+
+      <!-- Time (if provided) -->
+      <div class="time-display">{{TIME}}</div>
+
+      <!-- Available items -->
+      <div class="available-section">
+        <div class="available-label">Available Today:</div>
+        <ul class="items-list">
+          {{ITEMS:LIST}}
+        </ul>
+      </div>
+
+      <!-- Date -->
+      <div class="date-box">
+        <div class="date-label">{{DAY}}</div>
+        <div class="date">{{MONTH}} {{DATE}}, {{YEAR}}</div>
+      </div>
+
+      <div class="tagline">Freshly Baked with Love ❤️</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -783,6 +783,39 @@ app.post("/api/chats/:chatId/assign-background", async (req, res) => {
 // POSTER GENERATION WITH SUPABASE STORAGE
 // ==============================================
 
+// Helper function to replace custom template placeholders
+function replaceCustomPlaceholders(htmlContent, customData) {
+  if (!customData || typeof customData !== 'object') {
+    return htmlContent;
+  }
+
+  let result = htmlContent;
+
+  // Replace each custom placeholder
+  for (const [key, value] of Object.entries(customData)) {
+    const placeholder = `{{${key.toUpperCase()}}}`;
+
+    // Handle arrays - format as comma-separated list or HTML list
+    if (Array.isArray(value)) {
+      // Check if template wants HTML list format
+      const htmlListPlaceholder = `{{${key.toUpperCase()}:LIST}}`;
+      if (result.includes(htmlListPlaceholder)) {
+        const listItems = value.map(item => `<li>${item}</li>`).join('');
+        result = result.replace(htmlListPlaceholder, listItems);
+      }
+
+      // Replace regular placeholder with comma-separated string
+      const commaList = value.join(', ');
+      result = result.replace(new RegExp(placeholder, 'g'), commaList);
+    } else {
+      // Handle regular values (strings, numbers, etc.)
+      result = result.replace(new RegExp(placeholder, 'g'), String(value));
+    }
+  }
+
+  return result;
+}
+
 // Helper function to upload poster to Supabase Storage
 async function uploadPosterToStorage(pngBuffer, chatId, date) {
   if (!supabase) {
@@ -816,7 +849,7 @@ app.post("/api/posters/preview", async (req, res) => {
       return res.status(500).json({ error: "Supabase not configured" });
     }
 
-    const { chatId, date } = req.body;
+    const { chatId, date, templateData } = req.body;
 
     if (!chatId) {
       return res.status(400).json({ error: "Chat ID is required" });
@@ -887,6 +920,11 @@ app.post("/api/posters/preview", async (req, res) => {
     htmlContent = htmlContent.replace("{{CALENDAR_MONTH}}", calendarMonthName);
     htmlContent = htmlContent.replace("{{CALENDAR_YEAR}}", calendarYear);
     htmlContent = htmlContent.replace("{{CALENDAR_DAYS}}", calendarHTML);
+
+    // Replace custom template data
+    if (templateData) {
+      htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
+    }
 
     console.log(`Generating preview for chat ${chatId}`);
 
