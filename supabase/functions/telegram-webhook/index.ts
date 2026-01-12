@@ -257,10 +257,12 @@ async function handleDateRequest(chatId: number, messageText: string) {
     }
 
     // Send poster to user
-    console.log(`[handleDateRequest] Sending poster to user: ${result.posterUrl}`);
+    // Add cache-busting parameter to force Telegram to fetch fresh image
+    const cacheBustedUrl = `${result.posterUrl}?t=${Date.now()}`;
+    console.log(`[handleDateRequest] Sending poster to user: ${cacheBustedUrl}`);
     await sendPhoto(
       chatId,
-      result.posterUrl,
+      cacheBustedUrl,
       "✨ Fresh poster generated!",
     );
     console.log(`[handleDateRequest] SUCCESS - Poster sent to user`);
