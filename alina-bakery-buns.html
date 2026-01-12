@@ -102,15 +102,11 @@
       max-width: 900px;
     }
 
-    .emoji {
-      font-size: 70px;
+    .decorative-icon {
+      font-size: 48px;
       margin-bottom: 15px;
-      animation: bounce 2s ease-in-out infinite;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      color: #D2691E;
+      font-weight: bold;
     }
 
     .title {
@@ -141,6 +137,7 @@
       font-size: 35px;
       color: #DAA520;
       margin: 0 15px;
+      font-weight: bold;
     }
 
     /* Available items section */
@@ -175,8 +172,10 @@
     }
 
     .items-list li:before {
-      content: "🥐 ";
+      content: "• ";
       margin-right: 10px;
+      color: #D2691E;
+      font-weight: bold;
     }
 
     /* Time display */
@@ -193,7 +192,7 @@
     }
 
     .time-display:before {
-      content: "🕐 ";
+      content: "Time: ";
       margin-right: 10px;
     }
 
@@ -245,14 +244,14 @@
 
     <!-- Main content -->
     <div class="content">
-      <div class="emoji">🥐</div>
+      <div class="decorative-icon">★</div>
 
       <div class="title">Buns Available</div>
       <div class="subtitle">Today at</div>
       <div class="location">
-        <span class="wheat">🌾</span>
+        <span class="wheat">★</span>
         BLVQ
-        <span class="wheat">🌾</span>
+        <span class="wheat">★</span>
       </div>
 
       <!-- Time (if provided) -->
@@ -272,7 +271,7 @@
         <div class="date">{{MONTH}} {{DATE}}, {{YEAR}}</div>
       </div>
 
-      <div class="tagline">Freshly Baked with Love ❤️</div>
+      <div class="tagline">Freshly Baked with Love</div>
     </div>
   </div>
 </body>
