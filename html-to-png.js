@@ -48,16 +48,37 @@ async function htmlToPng(htmlPath, outputPath) {
     await page.evaluateHandle('document.fonts.ready');
 
     // Wait for all images to load
+    console.log('Checking for images in the page...');
+    const imageInfo = await page.evaluate(() => {
+      const images = Array.from(document.images);
+      return images.map(img => ({
+        src: img.src,
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight
+      }));
+    });
+    console.log('Images found:', JSON.stringify(imageInfo, null, 2));
+
     await page.evaluate(() => {
       return Promise.all(
         Array.from(document.images)
           .filter(img => !img.complete)
           .map(img => new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve; // Continue even if image fails to load
+            console.log('Waiting for image:', img.src);
+            img.onload = () => {
+              console.log('Image loaded:', img.src);
+              resolve();
+            };
+            img.onerror = (err) => {
+              console.error('Image failed to load:', img.src, err);
+              resolve();
+            };
           }))
       );
     });
+
+    console.log('All images loaded');
 
     await new Promise(resolve => setTimeout(resolve, 1000)); // Additional safety wait
 

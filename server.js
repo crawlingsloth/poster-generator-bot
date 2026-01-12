@@ -56,6 +56,64 @@ const upload = multer({
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Function to convert external images to base64 data URIs
+async function embedImagesAsBase64(htmlContent) {
+  const https = require('https');
+  const http = require('http');
+
+  // Find all img src URLs
+  const imgRegex = /<img[^>]+src="(https?:\/\/[^"]+)"[^>]*>/gi;
+  let match;
+  const replacements = [];
+
+  while ((match = imgRegex.exec(htmlContent)) !== null) {
+    const fullImgTag = match[0];
+    const imageUrl = match[1];
+    replacements.push({ fullImgTag, imageUrl });
+  }
+
+  // Download each image and convert to base64
+  for (const { fullImgTag, imageUrl } of replacements) {
+    try {
+      console.log(`Downloading image: ${imageUrl}`);
+      const protocol = imageUrl.startsWith('https') ? https : http;
+
+      const imageBuffer = await new Promise((resolve, reject) => {
+        protocol.get(imageUrl, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        }).on('error', reject);
+      });
+
+      // Determine mime type from URL or default to png
+      const ext = imageUrl.split('.').pop().toLowerCase();
+      const mimeTypes = {
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+      };
+      const mimeType = mimeTypes[ext] || 'image/png';
+
+      const base64 = imageBuffer.toString('base64');
+      const dataUri = `data:${mimeType};base64,${base64}`;
+
+      // Replace the URL in the img tag
+      const newImgTag = fullImgTag.replace(imageUrl, dataUri);
+      htmlContent = htmlContent.replace(fullImgTag, newImgTag);
+
+      console.log(`✓ Embedded image: ${imageUrl.substring(0, 50)}...`);
+    } catch (error) {
+      console.error(`Failed to embed image ${imageUrl}:`, error.message);
+    }
+  }
+
+  return htmlContent;
+}
+
 // Function to generate PNG from HTML
 async function generatePNG(htmlContent) {
   const tempHtmlPath = path.join(__dirname, "temp-ticket.html");
@@ -926,6 +984,9 @@ app.post("/api/posters/preview", async (req, res) => {
       htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
     }
 
+    // Embed external images as base64 to avoid loading issues
+    htmlContent = await embedImagesAsBase64(htmlContent);
+
     console.log(`Generating preview for chat ${chatId}`);
 
     // Generate PNG
@@ -1044,6 +1105,10 @@ app.post("/api/posters/generate", async (req, res) => {
       htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
       console.log(`[POST /api/posters/generate] Applied custom template data`);
     }
+
+    // Embed external images as base64 to avoid loading issues
+    console.log(`[POST /api/posters/generate] Embedding external images as base64...`);
+    htmlContent = await embedImagesAsBase64(htmlContent);
 
     // Debug mode: return HTML instead of PNG if debug=true
     if (req.body.debug === true) {
