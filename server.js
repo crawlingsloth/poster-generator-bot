@@ -984,9 +984,6 @@ app.post("/api/posters/preview", async (req, res) => {
       htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
     }
 
-    // Embed external images as base64 to avoid loading issues
-    htmlContent = await embedImagesAsBase64(htmlContent);
-
     console.log(`Generating preview for chat ${chatId}`);
 
     // Generate PNG
@@ -1105,10 +1102,6 @@ app.post("/api/posters/generate", async (req, res) => {
       htmlContent = replaceCustomPlaceholders(htmlContent, templateData);
       console.log(`[POST /api/posters/generate] Applied custom template data`);
     }
-
-    // Embed external images as base64 to avoid loading issues
-    console.log(`[POST /api/posters/generate] Embedding external images as base64...`);
-    htmlContent = await embedImagesAsBase64(htmlContent);
 
     // Debug mode: return HTML instead of PNG if debug=true
     if (req.body.debug === true) {
